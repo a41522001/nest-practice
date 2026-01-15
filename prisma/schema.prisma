@@ -1,0 +1,42 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String        @id @default(uuid()) @db.Char(36)
+  sub          String        @unique(map: "sub") @default(uuid()) @db.Char(36)
+  email        String        @unique(map: "email_UNIQUE") @db.VarChar(50)
+  password     String
+  name         String        @db.VarChar(20)
+  createdAt    DateTime      @default(now())
+  // 一個用戶擁有多筆交易
+  transactions Transaction[]
+}
+
+model Category {
+  id           String        @id @default(uuid())
+  name         String        @unique
+  transactions Transaction[]
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  amount    Decimal
+  note      String?
+  type      String // 'income' 或 'expense'
+  createdAt DateTime @default(now())
+
+  // 關聯到 User
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  // 關聯到 Category
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId String
+}
