@@ -8,15 +8,38 @@ datasource db {
   provider = "postgresql"
 }
 
+enum TransactionType {
+  income
+  expense
+}
+
 model User {
-  id           String        @id @default(uuid()) @db.Char(36)
-  sub          String        @unique(map: "sub") @default(uuid()) @db.Char(36)
-  email        String        @unique(map: "email_UNIQUE") @db.VarChar(50)
-  password     String
-  name         String        @db.VarChar(20)
-  createdAt    DateTime      @default(now())
-  // 一個用戶擁有多筆交易
+  id        String   @id @default(uuid()) @db.Char(36)
+  sub       String   @unique(map: "sub") @default(uuid()) @db.Char(36)
+  email     String   @unique(map: "email_UNIQUE") @db.VarChar(50)
+  password  String
+  name      String   @db.VarChar(20)
+  createdAt DateTime @default(now())
+
   transactions Transaction[]
+  tokens       Token[]
+}
+
+model Token {
+  id           String   @id @default(uuid()) @db.Char(36)
+  userId       String   @db.Char(36)
+  refreshToken String   @unique @db.VarChar(100)
+  createdAt    DateTime @default(now())
+  expiredAt    DateTime @db.Timestamp(0)
+
+  // 舊有的refresh token
+  oldRefreshToken String?   @unique @db.VarChar(100)
+  oldExpiredAt    DateTime? @db.Timestamp(0)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([expiredAt])
 }
 
 model Category {
@@ -26,11 +49,11 @@ model Category {
 }
 
 model Transaction {
-  id        String   @id @default(uuid())
+  id        String          @id @default(uuid())
   amount    Decimal
   note      String?
-  type      String // 'income' 或 'expense'
-  createdAt DateTime @default(now())
+  type      TransactionType // 'income' 或 'expense'
+  createdAt DateTime        @default(now())
 
   // 關聯到 User
   user   User   @relation(fields: [userId], references: [id])

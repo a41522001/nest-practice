@@ -30,10 +30,11 @@ export class TransactionsService {
     });
     return transactions;
   }
-  async deleteTransaction(transactionId: string) {
+  async deleteTransaction(transactionId: string, userId: string) {
     await this.prismaService.transaction.delete({
       where: {
         id: transactionId,
+        userId,
       },
     });
   }

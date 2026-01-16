@@ -8,6 +8,7 @@ import { envSchema } from './common/configs/env.config';
 import { CategoriesModule } from './categories/categories.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { TestModule } from './test/test.module';
+import { TokensModule } from './tokens/tokens.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -20,6 +21,7 @@ import { TestModule } from './test/test.module';
     CategoriesModule,
     TransactionsModule,
     TestModule,
+    TokensModule,
   ],
   controllers: [],
 })

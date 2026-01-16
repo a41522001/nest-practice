@@ -6,6 +6,7 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import { ValidationPipe } from '@nestjs/common';
 import cors from 'cors';
 import { EnvConfig } from './common/configs/env.config';
+import cookieParser from 'cookie-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService<EnvConfig>);
@@ -19,6 +20,7 @@ async function bootstrap() {
       credentials: true,
     }),
   );
+  app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // 自動過濾掉不在 DTO 裡的欄位

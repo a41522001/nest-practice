@@ -3,11 +3,19 @@ import { UserService } from 'src/user/user.service';
 import { LoginDto, SignupDto } from './auth.dto';
 import { decodePassword, saltPassword } from 'src/common/utils';
 import { JwtService } from '@nestjs/jwt';
+import { v4 as uuidv4 } from 'uuid';
+import { getRefreshTokenExpiresAt } from 'src/common/utils';
+import { ConfigService } from '@nestjs/config';
+import { EnvConfig } from 'src/common/configs/env.config';
+import { TokensService } from 'src/tokens/tokens.service';
+import { Tokens } from 'src/common/types';
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
-    private jwtService: JwtService,
+    private readonly jwtService: JwtService,
+    private readonly tokensService: TokensService,
+    private readonly configService: ConfigService<EnvConfig>,
   ) {}
 
   // 註冊
@@ -21,10 +29,10 @@ export class AuthService {
     await this.userService.createUser(name, email, saltPwd);
     return '註冊成功';
   }
-  // 登入
-  async login(loginDto: LoginDto): Promise<{ access_token: string }> {
-    const { email, pwd } = loginDto;
 
+  // 登入
+  async login(loginDto: LoginDto): Promise<Tokens> {
+    const { email, pwd } = loginDto;
     const user = await this.userService.findUser(email);
     if (!user) {
       throw new BadRequestException('帳號或密碼錯誤');
@@ -34,10 +42,37 @@ export class AuthService {
     if (!pwdIsMatch) {
       throw new BadRequestException('帳號或密碼錯誤');
     }
-    const payload = { sub: user.sub, username: user.name };
     // 製作JWT
+    const { accessToken, refreshToken, expireDate } = await this.generateTokens(
+      user.sub,
+      user.name,
+    );
+    await this.tokensService.saveRefreshToken(
+      user.id,
+      refreshToken,
+      expireDate,
+    );
     return {
-      access_token: await this.jwtService.signAsync(payload),
+      accessToken,
+      refreshToken,
+    };
+  }
+  // 創建 Token
+  async generateTokens(
+    sub: string,
+    username: string,
+  ): Promise<Tokens & { expireDate: Date }> {
+    const payload = { sub, username };
+    const accessToken = await this.jwtService.signAsync(payload);
+    const refreshToken = uuidv4();
+    const expireEnv = this.configService.getOrThrow('REFRESH_TOKEN_EXPIRE', {
+      infer: true,
+    });
+    const expireDate = getRefreshTokenExpiresAt(expireEnv);
+    return {
+      accessToken,
+      refreshToken,
+      expireDate,
     };
   }
 }

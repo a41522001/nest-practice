@@ -23,3 +23,9 @@ export const decodePassword = async (
   const isPasswordExist = await bcrypt.compare(userPassword, hashPassword);
   return isPasswordExist;
 };
+
+export const getRefreshTokenExpiresAt = (days: number): Date => {
+  const expireDate = new Date();
+  expireDate.setDate(expireDate.getDate() + days);
+  return expireDate;
+};

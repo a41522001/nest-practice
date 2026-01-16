@@ -10,7 +10,8 @@ export const envSchema = z.object({
   ACCESS_TOKEN_SECRET: z.string().min(10),
   ACCESS_TOKEN_EXPIRE: z.string(),
   REFRESH_TOKEN_SECRET: z.string().min(10),
-  REFRESH_TOKEN_EXPIRE: z.string(),
+  REFRESH_TOKEN_EXPIRE: z.string().transform((v) => Number(v)),
+  REFRESH_COUNT_LIMIT: z.string().transform((v) => Number(v)),
   API_URL: z.string(),
 });
 

@@ -8,10 +8,15 @@ interface JwtPayload {
   iss: string;
 }
 interface RequestWithUser extends Request {
-  user: JwtPayload & { id: string };
+  user: {
+    sub: string;
+    username: string;
+    id: string;
+  };
 }
-interface Todo {
-  title: string;
-  id: number;
+
+interface Tokens {
+  accessToken: string;
+  refreshToken: string;
 }
-export type { RequestWithUser, JwtPayload, Todo };
+export type { RequestWithUser, JwtPayload, Tokens };

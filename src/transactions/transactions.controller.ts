@@ -46,7 +46,11 @@ export class TransactionsController {
   }
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  async deleteTransaction(@Param('id') transactionId: string) {
-    await this.transactionsService.deleteTransaction(transactionId);
+  async deleteTransaction(
+    @Param('id') transactionId: string,
+    @Request() req: RequestWithUser,
+  ) {
+    const userId = req.user.id;
+    await this.transactionsService.deleteTransaction(transactionId, userId);
   }
 }

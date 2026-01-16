@@ -6,10 +6,13 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { EnvConfig } from '../common/configs/env.config';
 import { ConfigService } from '@nestjs/config';
+import { TokensModule } from 'src/tokens/tokens.module';
+
 @Module({
   imports: [
     UserModule,
     PassportModule,
+    TokensModule,
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],
