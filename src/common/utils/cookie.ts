@@ -1,5 +1,5 @@
 import type { Response } from 'express';
-import { EnvConfig } from '../configs/env.config';
+import { EnvConfig } from '@/common/configs/env.config';
 import { ConfigService } from '@nestjs/config';
 
 const getCookieOptions = (configService: ConfigService<EnvConfig>) => {

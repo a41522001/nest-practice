@@ -1,14 +1,14 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { UserService } from 'src/user/user.service';
+import { UserService } from '@/user/user.service';
 import { LoginDto, SignupDto } from './auth.dto';
-import { decodePassword, saltPassword } from 'src/common/utils';
+import { decodePassword, saltPassword } from '@/common/utils';
 import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
-import { getRefreshTokenExpiresAt } from 'src/common/utils';
+import { getRefreshTokenExpiresAt } from '@/common/utils';
 import { ConfigService } from '@nestjs/config';
-import { EnvConfig } from 'src/common/configs/env.config';
-import { TokensService } from 'src/tokens/tokens.service';
-import { Tokens } from 'src/common/types';
+import { EnvConfig } from '@/common/configs/env.config';
+import { TokensService } from '@/tokens/tokens.service';
+import { Tokens } from '@/common/types';
 @Injectable()
 export class AuthService {
   constructor(
@@ -74,5 +74,11 @@ export class AuthService {
       refreshToken,
       expireDate,
     };
+  }
+  // 登出
+  async logout(userId: string, refreshToken: string) {
+    if (refreshToken) {
+      await this.tokensService.deleteRefreshToken(userId, refreshToken);
+    }
   }
 }

@@ -10,11 +10,11 @@ import {
   Delete,
   Param,
 } from '@nestjs/common';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { AuthGuard } from '@/auth/auth.guard';
 import { CreateTransactionDto } from './transactions.dto';
-import type { RequestWithUser } from 'src/common/types';
+import type { RequestWithUser } from '@/common/types';
 import { TransactionsService } from './transactions.service';
-import { Transaction } from 'src/generated/prisma/client';
+import { Transaction } from '@/generated/prisma/client';
 
 @Controller('api/transactions')
 @UseGuards(AuthGuard)

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Token, User } from 'src/generated/prisma/client';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { EnvConfig } from '../common/configs/env.config';
+import { Token, User } from '@/generated/prisma/client';
+import { PrismaService } from '@/prisma/prisma.service';
+import { EnvConfig } from '@/common/configs/env.config';
 import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class TokensService {
@@ -73,10 +73,10 @@ export class TokensService {
     expireDate: Date,
   ) {
     const userTokens = await this.findTokensByUserId(userId);
-    const limit = this.configService.getOrThrow('REFRESH_COUNT_LIMIT', {
+    const maxDevices = this.configService.getOrThrow('MAX_DEVICES', {
       infer: true,
     });
-    if (userTokens.length >= limit) {
+    if (userTokens.length >= maxDevices) {
       // 更新refresh token
       await this.updateRefreshToken(userTokens[0], refreshToken, expireDate);
     } else {
@@ -102,6 +102,15 @@ export class TokensService {
       },
       where: {
         id: tokenId,
+      },
+    });
+  }
+  // 刪除token資料
+  async deleteRefreshToken(userId: string, refreshToken: string) {
+    await this.prismaService.token.delete({
+      where: {
+        refreshToken,
+        userId,
       },
     });
   }

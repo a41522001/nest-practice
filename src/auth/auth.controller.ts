@@ -12,11 +12,11 @@ import {
 import { AuthService } from './auth.service';
 import { LoginDto, SignupDto } from './auth.dto';
 import { AuthGuard } from './auth.guard';
-import type { RequestWithUser } from 'src/common/types';
+import type { RequestWithUser } from '@/common/types';
 import type { Response } from 'express';
-import { getCookieOptions } from '../common/utils/cookie';
+import { getCookieOptions, clearCookie } from '@/common/utils/cookie';
 import { ConfigService } from '@nestjs/config';
-import { EnvConfig } from 'src/common/configs/env.config';
+import { EnvConfig } from '@/common/configs/env.config';
 @Controller('api/auth')
 export class AuthController {
   constructor(
@@ -40,14 +40,33 @@ export class AuthController {
     const { accessToken, refreshToken } =
       await this.authService.login(loginUserDto);
     const cookieOption = getCookieOptions(this.configService);
+    const accessTokenCookieExpire = this.configService.get(
+      'ACCESS_TOKEN_COOKIE_EXPIRE',
+      { infer: true },
+    );
+    const refreshTokenCookieExpire = this.configService.get(
+      'REFRESH_TOKEN_COOKIE_EXPIRE',
+      { infer: true },
+    );
     res.cookie('accessToken', accessToken, {
-      maxAge: 15 * 60 * 1000,
+      maxAge: accessTokenCookieExpire,
       ...cookieOption,
     });
     res.cookie('refreshToken', refreshToken, {
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: refreshTokenCookieExpire,
       ...cookieOption,
     });
+  }
+  // 登出
+  @Get('logout')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard)
+  async logout(@Request() req: RequestWithUser, @Res() res: Response) {
+    const { refreshToken } = req.cookies;
+    const userId = req.user.id;
+    await this.authService.logout(userId, refreshToken);
+    clearCookie(this.configService, res, 'accessToken');
+    clearCookie(this.configService, res, 'refreshToken');
   }
   // TODO: profile 會棄用
   @UseGuards(AuthGuard)

@@ -9,6 +9,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { TestModule } from './test/test.module';
 import { TokensModule } from './tokens/tokens.module';
+import { RedisModule } from './redis/redis.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -22,8 +23,8 @@ import { TokensModule } from './tokens/tokens.module';
     TransactionsModule,
     TestModule,
     TokensModule,
+    RedisModule,
   ],
-  controllers: [],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

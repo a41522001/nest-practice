@@ -8,9 +8,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
-import { Category } from 'src/generated/prisma/client';
+import { Category } from '@/generated/prisma/client';
 import { CreateCategoryDto } from './categories.dto';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { AuthGuard } from '@/auth/auth.guard';
 
 @Controller('api/categories')
 @UseGuards(AuthGuard)
