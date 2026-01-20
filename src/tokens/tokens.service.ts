@@ -60,8 +60,8 @@ export class TokensService {
     const score = expireDate.getTime();
     const tokenKey = authRefreshTokenKey(refreshToken);
     const userZSetKey = authUserRefreshTokenKey(userId);
-    // refreshTokenCookieExpire = 毫秒計算 所以算秒數需 / 1000 再添加容錯率 60 秒
-    const hashExpire = refreshTokenCookieExpire / 1000 + 60;
+    // refreshTokenCookieExpire = 毫秒計算 所以算秒數需 / 1000
+    const hashExpire = refreshTokenCookieExpire / 1000;
     const multi = this.redis.multi();
     const nowTimestamp = DateTime.utc().toMillis();
     // 寫redis
