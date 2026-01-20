@@ -57,8 +57,7 @@ export class AuthGuard implements CanActivate {
         return false;
       }
 
-      const { sub, name } = isRefreshTokenExist.user;
-      const isNewToken = isRefreshTokenExist.refreshToken === refreshToken;
+      const { sub, name, userId, isOld } = isRefreshTokenExist;
       const cookieOption = getCookieOptions(this.configService);
       const {
         accessToken: newAccessToken,
@@ -75,15 +74,16 @@ export class AuthGuard implements CanActivate {
         { infer: true },
       );
       // 如果是新的 token 就輪轉 舊的直接放行
-      if (isNewToken) {
-        const oldExpiredAt = new Date(Date.now() + 15_000);
-        await this.tokensService.rotateRefreshToken(
-          isRefreshTokenExist.id,
-          refreshToken,
+      if (!isOld) {
+        const data = {
+          oldRefreshToken: refreshToken,
           newRefreshToken,
-          oldExpiredAt,
-          expireDate,
-        );
+          userId,
+          sub,
+          username: name,
+          newExpireDate: expireDate,
+        };
+        await this.tokensService.rotateRefreshToken(data);
         res.cookie('refreshToken', newRefreshToken, {
           maxAge: refreshTokenCookieExpire,
           ...cookieOption,
@@ -94,7 +94,7 @@ export class AuthGuard implements CanActivate {
         maxAge: accessTokenCookieExpire,
         ...cookieOption,
       });
-      req.user = { sub, username: name, id: isRefreshTokenExist.userId };
+      req.user = { sub, username: name, id: userId };
       return true;
     } catch {
       return false;

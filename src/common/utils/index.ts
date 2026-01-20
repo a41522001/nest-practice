@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import { DateTime, Duration, Interval } from 'luxon';
 /**
  * 對密碼進行加鹽hash處理。
  * @param {string} password - 需要hash處理的純文字密碼。
@@ -25,7 +26,8 @@ export const decodePassword = async (
 };
 
 export const getRefreshTokenExpiresAt = (days: number): Date => {
-  const expireDate = new Date();
-  expireDate.setDate(expireDate.getDate() + days);
-  return expireDate;
+  const expireDate = DateTime.utc().plus({ days });
+  return expireDate.toJSDate();
 };
+
+export const getTaipeiTime = () => '';

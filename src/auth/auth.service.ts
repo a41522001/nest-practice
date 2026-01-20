@@ -49,6 +49,8 @@ export class AuthService {
     );
     await this.tokensService.saveRefreshToken(
       user.id,
+      user.sub,
+      user.name,
       refreshToken,
       expireDate,
     );

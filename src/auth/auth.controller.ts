@@ -61,7 +61,10 @@ export class AuthController {
   @Get('logout')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard)
-  async logout(@Request() req: RequestWithUser, @Res() res: Response) {
+  async logout(
+    @Request() req: RequestWithUser,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const { refreshToken } = req.cookies;
     const userId = req.user.id;
     await this.authService.logout(userId, refreshToken);

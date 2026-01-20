@@ -1,117 +1,136 @@
 import { Injectable } from '@nestjs/common';
-import { Token, User } from '@/generated/prisma/client';
-import { PrismaService } from '@/prisma/prisma.service';
 import { EnvConfig } from '@/common/configs/env.config';
 import { ConfigService } from '@nestjs/config';
+import { RedisService } from '@/redis/redis.service';
+import { DateTime } from 'luxon';
+import { authRefreshTokenKey, authUserRefreshTokenKey } from '@/redis/keys';
+import { HashAuthRefreshToken } from '@/redis/types';
+import { RotateRefreshToken } from './tokens.dto';
 @Injectable()
 export class TokensService {
   constructor(
-    private readonly prismaService: PrismaService,
+    private readonly redisService: RedisService,
     private readonly configService: ConfigService<EnvConfig>,
   ) {}
-  // 新增token
-  async addRefreshToken(userId: string, refreshToken: string, expiredAt: Date) {
-    await this.prismaService.token.create({
-      data: {
-        userId,
-        refreshToken,
-        expiredAt,
-      },
-    });
-  }
-  // 取得token(用userId)
-  async findTokensByUserId(userId: string): Promise<Token[]> {
-    const tokens = await this.prismaService.token.findMany({
-      where: {
-        userId,
-      },
-      orderBy: { createdAt: 'asc' },
-    });
-    return tokens;
+
+  // 取得 Redis 客戶端實例
+  private get redis() {
+    return this.redisService.getClient();
   }
   // 取得token(用refreshToken)
   async findTokenByValue(
     refreshToken: string,
-  ): Promise<({ user: User } & Token) | null> {
-    const now = new Date();
-    const token = await this.prismaService.token.findFirst({
-      where: {
-        OR: [
-          { refreshToken: refreshToken, expiredAt: { gt: now } },
-          { oldRefreshToken: refreshToken, oldExpiredAt: { gt: now } },
-        ],
-      },
-      include: {
-        user: true,
-      },
-    });
-    return token;
-  }
-  // 更新token
-  async updateRefreshToken(
-    oldToken: Token,
-    newToken: string,
-    expireDate: Date,
-  ) {
-    await this.prismaService.token.update({
-      data: {
-        refreshToken: newToken,
-        expiredAt: expireDate,
-        createdAt: new Date(),
-        oldRefreshToken: null,
-        oldExpiredAt: null,
-      },
-      where: {
-        id: oldToken.id,
-      },
-    });
+  ): Promise<HashAuthRefreshToken | null> {
+    const key = authRefreshTokenKey(refreshToken);
+    const token: Record<keyof HashAuthRefreshToken, string> =
+      await this.redis.hgetall(key);
+    if (!token || Object.keys(token).length === 0) {
+      return null;
+    }
+    const expireTimestamp = Number(token.expire);
+    const now = DateTime.utc().toMillis();
+    if (now > expireTimestamp) {
+      // 主動刪除這個已過期但可能還殘留在 Redis 的 Key
+      await this.redis.del(key);
+      return null;
+    }
+    return {
+      ...token,
+      expire: expireTimestamp,
+      isOld: token.isOld === '1',
+    };
   }
   // 儲存token
   async saveRefreshToken(
     userId: string,
+    sub: string,
+    username: string,
     refreshToken: string,
     expireDate: Date,
   ) {
-    const userTokens = await this.findTokensByUserId(userId);
     const maxDevices = this.configService.getOrThrow('MAX_DEVICES', {
       infer: true,
     });
-    if (userTokens.length >= maxDevices) {
-      // 更新refresh token
-      await this.updateRefreshToken(userTokens[0], refreshToken, expireDate);
-    } else {
-      // 寫入refresh token
-      await this.addRefreshToken(userId, refreshToken, expireDate);
+    const refreshTokenCookieExpire = this.configService.getOrThrow(
+      'REFRESH_TOKEN_COOKIE_EXPIRE',
+      {
+        infer: true,
+      },
+    );
+    const score = expireDate.getTime();
+    const tokenKey = authRefreshTokenKey(refreshToken);
+    const userZSetKey = authUserRefreshTokenKey(userId);
+    // refreshTokenCookieExpire = 毫秒計算 所以算秒數需 / 1000 再添加容錯率 60 秒
+    const hashExpire = refreshTokenCookieExpire / 1000 + 60;
+    const multi = this.redis.multi();
+    const nowTimestamp = DateTime.utc().toMillis();
+    // 寫redis
+    multi.hset(tokenKey, {
+      userId,
+      expire: expireDate.getTime().toString(),
+      sub,
+      name: username,
+      isOld: 0,
+    });
+    multi.expire(tokenKey, hashExpire);
+    multi.zadd(userZSetKey, score, refreshToken);
+    console.log(nowTimestamp);
+    multi.zremrangebyscore(userZSetKey, '-inf', nowTimestamp);
+    multi.zcard(userZSetKey);
+    const results = await multi.exec();
+    const currentDeviceCount = results![4][1] as number;
+    // 計算裝置不許超過 maxDevices
+    if (currentDeviceCount > maxDevices) {
+      const oldTokens = await this.redis.zrange(
+        userZSetKey,
+        0,
+        currentDeviceCount - maxDevices - 1,
+      );
+      if (oldTokens.length > 0) {
+        const deleteMulti = this.redis.multi();
+        for (const oldToken of oldTokens) {
+          deleteMulti.del(authRefreshTokenKey(oldToken)); // 刪除舊的 Hash
+        }
+        deleteMulti.zremrangebyrank(
+          userZSetKey,
+          0,
+          currentDeviceCount - maxDevices - 1,
+        ); // 從 ZSet 移除
+        await deleteMulti.exec();
+      }
     }
   }
   // 刷新token
-  async rotateRefreshToken(
-    tokenId: string,
-    oldRefreshToken: string,
-    newRefreshToken: string,
-    oldExpiredAt: Date,
-    newExpiredAt: Date,
-  ) {
-    await this.prismaService.token.update({
-      data: {
-        refreshToken: newRefreshToken,
-        oldRefreshToken: oldRefreshToken,
-        oldExpiredAt,
-        expiredAt: newExpiredAt,
-        createdAt: new Date(),
-      },
-      where: {
-        id: tokenId,
-      },
-    });
+  async rotateRefreshToken(data: RotateRefreshToken) {
+    const {
+      oldRefreshToken,
+      userId,
+      sub,
+      username,
+      newRefreshToken,
+      newExpireDate,
+    } = data;
+    const oldTokenKey = authRefreshTokenKey(oldRefreshToken);
+    const userZSetKey = authUserRefreshTokenKey(userId);
+    await this.redis.zrem(userZSetKey, oldRefreshToken);
+
+    const multi = this.redis.multi();
+    multi.hset(oldTokenKey, { isOld: 1 });
+    multi.expire(oldTokenKey, 15);
+    await multi.exec();
+    await this.saveRefreshToken(
+      userId,
+      sub,
+      username,
+      newRefreshToken,
+      newExpireDate,
+    );
   }
   // 刪除token資料
   async deleteRefreshToken(userId: string, refreshToken: string) {
-    await this.prismaService.token.delete({
-      where: {
-        refreshToken,
-        userId,
-      },
-    });
+    const multi = this.redis.multi();
+    multi.zrem(authUserRefreshTokenKey(userId), refreshToken);
+    multi.del(authRefreshTokenKey(refreshToken));
+    await multi.exec();
   }
 }
