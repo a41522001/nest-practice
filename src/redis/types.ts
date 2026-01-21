@@ -5,4 +5,9 @@ interface HashAuthRefreshToken {
   name: string;
   isOld: boolean;
 }
-export type { HashAuthRefreshToken };
+interface HashUserInfo {
+  id: string;
+  name: string;
+  email: string;
+}
+export type { HashAuthRefreshToken, HashUserInfo };

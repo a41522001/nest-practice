@@ -17,7 +17,6 @@ export class AuthService {
     private readonly tokensService: TokensService,
     private readonly configService: ConfigService<EnvConfig>,
   ) {}
-
   // 註冊
   async signup(signupDto: SignupDto): Promise<string> {
     const { name, email, pwd } = signupDto;
@@ -25,6 +24,7 @@ export class AuthService {
     if (user) {
       throw new BadRequestException('此Email已被使用');
     }
+
     const saltPwd = await saltPassword(pwd);
     await this.userService.createUser(name, email, saltPwd);
     return '註冊成功';
@@ -47,13 +47,23 @@ export class AuthService {
       user.sub,
       user.name,
     );
-    await this.tokensService.saveRefreshToken(
-      user.id,
-      user.sub,
-      user.name,
-      refreshToken,
-      expireDate,
-    );
+    const userInfoDto = {
+      userId: user.id,
+      userName: user.name,
+      sub: user.sub,
+      email: user.email,
+    };
+    await Promise.all([
+      this.userService.setUserInfo(userInfoDto),
+      this.tokensService.saveRefreshToken(
+        user.id,
+        user.sub,
+        user.name,
+        refreshToken,
+        expireDate,
+      ),
+    ]);
+
     return {
       accessToken,
       refreshToken,

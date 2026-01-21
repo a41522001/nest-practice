@@ -74,7 +74,6 @@ export class TokensService {
     });
     multi.expire(tokenKey, hashExpire);
     multi.zadd(userZSetKey, score, refreshToken);
-    console.log(nowTimestamp);
     multi.zremrangebyscore(userZSetKey, '-inf', nowTimestamp);
     multi.zcard(userZSetKey);
     const results = await multi.exec();

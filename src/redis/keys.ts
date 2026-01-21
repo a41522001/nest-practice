@@ -4,4 +4,6 @@ const authRefreshTokenKey = (refreshToken: string): string =>
 const authUserRefreshTokenKey = (userId: string): string =>
   `auth:user#${userId}:refreshToken`;
 
-export { authRefreshTokenKey, authUserRefreshTokenKey };
+const userSubKey = (sub: string): string => `user:sub#${sub}`;
+
+export { authRefreshTokenKey, authUserRefreshTokenKey, userSubKey };
