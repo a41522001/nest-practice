@@ -1,6 +1,6 @@
 interface UserInfoDto {
   userId: string;
-  userName: string;
+  username: string;
   sub: string;
   email: string;
 }

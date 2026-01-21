@@ -4,6 +4,7 @@ interface HashAuthRefreshToken {
   sub: string;
   name: string;
   isOld: boolean;
+  email: string;
 }
 interface HashUserInfo {
   id: string;

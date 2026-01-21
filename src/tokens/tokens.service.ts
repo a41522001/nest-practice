@@ -5,10 +5,12 @@ import { RedisService } from '@/redis/redis.service';
 import { DateTime } from 'luxon';
 import { authRefreshTokenKey, authUserRefreshTokenKey } from '@/redis/keys';
 import { HashAuthRefreshToken } from '@/redis/types';
-import { RotateRefreshToken } from './tokens.dto';
+import { RotateRefreshTokenDto, SaveRefreshTokenDto } from './tokens.dto';
+import { UserService } from '@/user/user.service';
 @Injectable()
 export class TokensService {
   constructor(
+    private readonly userService: UserService,
     private readonly redisService: RedisService,
     private readonly configService: ConfigService<EnvConfig>,
   ) {}
@@ -41,13 +43,7 @@ export class TokensService {
     };
   }
   // 儲存token
-  async saveRefreshToken(
-    userId: string,
-    sub: string,
-    username: string,
-    refreshToken: string,
-    expireDate: Date,
-  ) {
+  async saveRefreshToken(saveRefreshTokenDto: SaveRefreshTokenDto) {
     const maxDevices = this.configService.getOrThrow('MAX_DEVICES', {
       infer: true,
     });
@@ -57,6 +53,8 @@ export class TokensService {
         infer: true,
       },
     );
+    const { userId, sub, username, refreshToken, expireDate, email } =
+      saveRefreshTokenDto;
     const score = expireDate.getTime();
     const tokenKey = authRefreshTokenKey(refreshToken);
     const userZSetKey = authUserRefreshTokenKey(userId);
@@ -71,6 +69,7 @@ export class TokensService {
       sub,
       name: username,
       isOld: 0,
+      email,
     });
     multi.expire(tokenKey, hashExpire);
     multi.zadd(userZSetKey, score, refreshToken);
@@ -100,7 +99,7 @@ export class TokensService {
     }
   }
   // 刷新token
-  async rotateRefreshToken(data: RotateRefreshToken) {
+  async rotateRefreshToken(data: RotateRefreshTokenDto) {
     const {
       oldRefreshToken,
       userId,
@@ -108,22 +107,32 @@ export class TokensService {
       username,
       newRefreshToken,
       newExpireDate,
+      email,
     } = data;
+
     const oldTokenKey = authRefreshTokenKey(oldRefreshToken);
     const userZSetKey = authUserRefreshTokenKey(userId);
+    const saveRefreshTokenDto = {
+      userId,
+      sub,
+      username,
+      refreshToken: newRefreshToken,
+      expireDate: newExpireDate,
+      email,
+    };
+    const userInfo = {
+      userId,
+      username,
+      sub,
+      email,
+    };
     await this.redis.zrem(userZSetKey, oldRefreshToken);
-
     const multi = this.redis.multi();
     multi.hset(oldTokenKey, { isOld: 1 });
     multi.expire(oldTokenKey, 15);
     await multi.exec();
-    await this.saveRefreshToken(
-      userId,
-      sub,
-      username,
-      newRefreshToken,
-      newExpireDate,
-    );
+    await this.saveRefreshToken(saveRefreshTokenDto);
+    await this.userService.setUserInfo(userInfo);
   }
   // 刪除token資料
   async deleteRefreshToken(userId: string, refreshToken: string) {

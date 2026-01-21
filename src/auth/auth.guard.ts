@@ -57,7 +57,7 @@ export class AuthGuard implements CanActivate {
         return false;
       }
 
-      const { sub, name, userId, isOld } = isRefreshTokenExist;
+      const { sub, name, userId, isOld, email } = isRefreshTokenExist;
       const cookieOption = getCookieOptions(this.configService);
       const {
         accessToken: newAccessToken,
@@ -82,6 +82,7 @@ export class AuthGuard implements CanActivate {
           sub,
           username: name,
           newExpireDate: expireDate,
+          email,
         };
         await this.tokensService.rotateRefreshToken(data);
         res.cookie('refreshToken', newRefreshToken, {

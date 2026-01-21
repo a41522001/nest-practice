@@ -32,13 +32,13 @@ export class UserService {
     });
   }
   // 取得UserID
-  async getUserId(userName: string, sub: string): Promise<string | null> {
+  async getUserId(username: string, sub: string): Promise<string | null> {
     const user = await this.prisma.user.findUnique({
       where: {
         sub,
       },
     });
-    if (user && user.name === userName) {
+    if (user && user.name === username) {
       return user.id;
     }
     return user?.id ?? null;
@@ -48,12 +48,12 @@ export class UserService {
     const expireEnv = this.configService.getOrThrow('ACCESS_TOKEN_EXPIRE', {
       infer: true,
     });
-    const { userId, userName, sub, email } = userInfo;
+    const { userId, username, sub, email } = userInfo;
     const redisExpire = parseInt(expireEnv.split('m')[0]) * 60 + 5;
     const pipeline = this.redis.pipeline();
     pipeline.hset(userSubKey(sub), {
       userId,
-      userName,
+      username,
       email,
     });
     pipeline.expire(userSubKey(sub), redisExpire);

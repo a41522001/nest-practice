@@ -49,19 +49,21 @@ export class AuthService {
     );
     const userInfoDto = {
       userId: user.id,
-      userName: user.name,
+      username: user.name,
       sub: user.sub,
+      email: user.email,
+    };
+    const saveRefreshTokenDto = {
+      userId: user.id,
+      sub: user.sub,
+      username: user.name,
+      refreshToken,
+      expireDate,
       email: user.email,
     };
     await Promise.all([
       this.userService.setUserInfo(userInfoDto),
-      this.tokensService.saveRefreshToken(
-        user.id,
-        user.sub,
-        user.name,
-        refreshToken,
-        expireDate,
-      ),
+      this.tokensService.saveRefreshToken(saveRefreshTokenDto),
     ]);
 
     return {
