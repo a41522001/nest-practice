@@ -33,8 +33,16 @@ export class UserService {
   }
   // 取得UserID
   async getUserId(sub: string): Promise<string | null> {
-    const userId = this.redis.hget(userSubKey(sub), 'userId');
-    return userId;
+    const userId = await this.redis.hget(userSubKey(sub), 'userId');
+    if (userId) {
+      return userId;
+    }
+    const user = await this.prisma.user.findUnique({
+      where: {
+        sub,
+      },
+    });
+    return user?.id ?? null;
   }
   // 儲存userInfo
   async setUserInfo(userInfo: UserInfoDto) {
