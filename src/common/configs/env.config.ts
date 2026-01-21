@@ -18,6 +18,7 @@ export const envSchema = z.object({
   REDIS_HOST: z.string().default('127.0.0.1'),
   REDIS_PORT: z.preprocess((v) => Number(v), z.number().default(6379)),
   REDIS_PASSWORD: z.string().optional(),
+  POSTGRES_PASSWORD: z.string(),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
