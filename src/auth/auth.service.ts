@@ -9,14 +9,21 @@ import { ConfigService } from '@nestjs/config';
 import { EnvConfig } from '@/common/configs/env.config';
 import { TokensService } from '@/tokens/tokens.service';
 import { Tokens } from '@/common/types';
+import { RedisService } from '@/redis/redis.service';
+import { authRefreshTokenKey } from '@/redis/keys';
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly tokensService: TokensService,
+    private readonly redisService: RedisService,
     private readonly configService: ConfigService<EnvConfig>,
   ) {}
+  // 取得 Redis 客戶端實例
+  private get redis() {
+    return this.redisService.getClient();
+  }
   // 註冊
   async signup(signupDto: SignupDto): Promise<string> {
     const { name, email, pwd } = signupDto;
@@ -31,7 +38,13 @@ export class AuthService {
   }
 
   // 登入
-  async login(loginDto: LoginDto): Promise<Tokens> {
+  async login(
+    loginDto: LoginDto,
+    cookieRefreshToken: string | undefined,
+  ): Promise<Tokens> {
+    if (cookieRefreshToken) {
+      await this.redis.del(authRefreshTokenKey(cookieRefreshToken));
+    }
     const { email, pwd } = loginDto;
     const user = await this.userService.findUser(email);
     if (!user) {

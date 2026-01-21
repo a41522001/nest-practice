@@ -126,13 +126,18 @@ export class TokensService {
       sub,
       email,
     };
-    await this.redis.zrem(userZSetKey, oldRefreshToken);
-    const multi = this.redis.multi();
-    multi.hset(oldTokenKey, { isOld: 1 });
-    multi.expire(oldTokenKey, 15);
-    await multi.exec();
-    await this.saveRefreshToken(saveRefreshTokenDto);
-    await this.userService.setUserInfo(userInfo);
+    const markOldToken = async () => {
+      const multi = this.redis.multi();
+      multi.hset(oldTokenKey, { isOld: 1 });
+      multi.expire(oldTokenKey, 15);
+      return multi.exec();
+    };
+    await Promise.all([
+      this.redis.zrem(userZSetKey, oldRefreshToken),
+      markOldToken(),
+      this.saveRefreshToken(saveRefreshTokenDto),
+      this.userService.setUserInfo(userInfo),
+    ]);
   }
   // 刪除token資料
   async deleteRefreshToken(userId: string, refreshToken: string) {

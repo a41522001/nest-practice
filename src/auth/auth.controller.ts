@@ -13,7 +13,7 @@ import { AuthService } from './auth.service';
 import { LoginDto, SignupDto } from './auth.dto';
 import { AuthGuard } from './auth.guard';
 import type { RequestWithUser } from '@/common/types';
-import type { Response } from 'express';
+import type { Response, Request as RequestType } from 'express';
 import { getCookieOptions, clearCookie } from '@/common/utils/cookie';
 import { ConfigService } from '@nestjs/config';
 import { EnvConfig } from '@/common/configs/env.config';
@@ -35,10 +35,14 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() loginUserDto: LoginDto,
+    @Request() req: RequestType,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
-    const { accessToken, refreshToken } =
-      await this.authService.login(loginUserDto);
+    const { refreshToken: cookieRefreshToken } = req.cookies;
+    const { accessToken, refreshToken } = await this.authService.login(
+      loginUserDto,
+      cookieRefreshToken,
+    );
     const cookieOption = getCookieOptions(this.configService);
     const accessTokenCookieExpire = this.configService.get(
       'ACCESS_TOKEN_COOKIE_EXPIRE',
