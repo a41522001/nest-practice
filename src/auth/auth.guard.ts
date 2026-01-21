@@ -116,10 +116,7 @@ export class AuthGuard implements CanActivate {
       const payload: JwtPayload =
         await this.jwtService.verifyAsync(accessToken);
       // 用 sub + username 去查 user 是否存在
-      const userId = await this.userService.getUserId(
-        payload.username,
-        payload.sub,
-      );
+      const userId = await this.userService.getUserId(payload.sub);
       if (!userId) {
         return false;
       }

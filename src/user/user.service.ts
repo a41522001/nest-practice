@@ -32,16 +32,9 @@ export class UserService {
     });
   }
   // 取得UserID
-  async getUserId(username: string, sub: string): Promise<string | null> {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        sub,
-      },
-    });
-    if (user && user.name === username) {
-      return user.id;
-    }
-    return user?.id ?? null;
+  async getUserId(sub: string): Promise<string | null> {
+    const userId = this.redis.hget(userSubKey(sub), 'userId');
+    return userId;
   }
   // 儲存userInfo
   async setUserInfo(userInfo: UserInfoDto) {
