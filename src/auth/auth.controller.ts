@@ -37,7 +37,8 @@ export class AuthController {
     @Body() loginUserDto: LoginDto,
     @Request() req: RequestType,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<void> {
+  ): Promise<string> {
+    console.log('login');
     const { refreshToken: cookieRefreshToken } = req.cookies;
     const { accessToken, refreshToken } = await this.authService.login(
       loginUserDto,
@@ -60,6 +61,7 @@ export class AuthController {
       maxAge: refreshTokenCookieExpire,
       ...cookieOption,
     });
+    return '登入成功';
   }
   // 登出
   @Get('logout')

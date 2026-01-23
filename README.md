@@ -37,6 +37,13 @@ npx prisma generate
 ```
 ---
 
+### 5. 同步資料庫結構
+將 prisma/schema.prisma 定義的結構同步到你的 PostgreSQL 資料庫中：
+```bash
+npx prisma db push
+```
+---
+
 ## 執行專案
 請根據你的需求選擇執行模式：
 ```bash

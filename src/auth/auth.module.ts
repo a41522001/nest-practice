@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UserModule } from '@/user/user.module';
@@ -7,6 +8,7 @@ import { PassportModule } from '@nestjs/passport';
 import { EnvConfig } from '@/common/configs/env.config';
 import { ConfigService } from '@nestjs/config';
 import { TokensModule } from '@/tokens/tokens.module';
+import { TokenRefreshInterceptor } from '@/common/interceptors/tokenRefresh.interceptor';
 
 @Module({
   imports: [
@@ -28,7 +30,13 @@ import { TokensModule } from '@/tokens/tokens.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [
+    AuthService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TokenRefreshInterceptor,
+    },
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

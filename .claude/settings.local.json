@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"C:\\\\Users\\\\a4152\\\\Desktop\\\\nest\\\\nest\" log --oneline -10)",
+      "Bash(xargs:*)",
+      "Bash(wc -l \"C:\\\\Users\\\\a4152\\\\Desktop\\\\nest\\\\nest\\\\src\"/**/*.ts)",
+      "Bash(find:*)",
+      "Bash(git -C \"C:\\\\Users\\\\a4152\\\\Desktop\\\\nest\\\\nest\" diff HEAD~1..HEAD --name-only)",
+      "Bash(tree:*)"
+    ]
+  }
+}

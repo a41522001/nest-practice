@@ -27,14 +27,18 @@ export class TransformInterceptor<T> implements NestInterceptor<
     // 2. 在 getResponse 後面加上 <ExpressResponse> 告訴 TS 它的型別
     const response = context.switchToHttp().getResponse<ExpressResponse>();
     const statusCode = response.statusCode;
+    console.log(statusCode);
 
     return next.handle().pipe(
-      map((data: T) => ({
-        code: statusCode,
-        data: data,
-        message: '請求成功',
-        time: new Date().toISOString(),
-      })),
+      map((data: T) => {
+        console.log(data);
+        return {
+          code: statusCode,
+          data: data,
+          message: '請求成功',
+          time: new Date().toISOString(),
+        };
+      }),
     );
   }
 }
