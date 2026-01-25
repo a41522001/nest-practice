@@ -4,7 +4,7 @@ import {
   ExecutionContext,
   CallHandler,
 } from '@nestjs/common';
-import { Response as ExpressResponse } from 'express'; // 1. 導入 Express 的 Response 型別
+import { Response as ExpressResponse } from 'express';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -24,14 +24,10 @@ export class TransformInterceptor<T> implements NestInterceptor<
     context: ExecutionContext,
     next: CallHandler<T>,
   ): Observable<Response<T>> {
-    // 2. 在 getResponse 後面加上 <ExpressResponse> 告訴 TS 它的型別
     const response = context.switchToHttp().getResponse<ExpressResponse>();
     const statusCode = response.statusCode;
-    console.log(statusCode);
-
     return next.handle().pipe(
       map((data: T) => {
-        console.log(data);
         return {
           code: statusCode,
           data: data,
