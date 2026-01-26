@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { CreateTransactionDto, QueryTransactionDto } from './transactions.dto';
+import {
+  CreateTransactionDto,
+  QueryTransactionDto,
+  UpdateTransactionDto,
+} from './transactions.dto';
 import { PrismaService } from '@/prisma/prisma.service';
 import { Prisma, Transaction } from '@/generated/prisma/client';
 import { DateTime } from 'luxon';
@@ -69,6 +73,20 @@ export class TransactionsService {
         id: transactionId,
         userId,
       },
+    });
+  }
+
+  async updateTransaction(
+    transactionId: string,
+    userId: string,
+    updateTransactionDto: UpdateTransactionDto,
+  ) {
+    await this.prismaService.transaction.update({
+      where: {
+        id: transactionId,
+        userId,
+      },
+      data: updateTransactionDto,
     });
   }
 }

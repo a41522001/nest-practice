@@ -22,12 +22,19 @@ model User {
   createdAt DateTime @default(now())
 
   transactions Transaction[]
+  categories   Category[]
 }
 
 model Category {
-  id           String        @id @default(uuid())
-  name         String        @unique
+  id        String    @id @default(uuid())
+  name      String    @unique
+  deletedAt DateTime?
+  userId    String? // 可選：null = 系統預設，有值 = 用戶自訂
+
+  user         User?         @relation(fields: [userId], references: [id])
   transactions Transaction[]
+
+  @@unique([name, userId]) // 同一用戶不能有重複類別名
 }
 
 model Transaction {

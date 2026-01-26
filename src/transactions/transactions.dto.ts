@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import {
   IsString,
   MaxLength,
@@ -13,7 +13,7 @@ import {
 import { TransactionType } from '@/generated/prisma/client';
 class CreateTransactionDto {
   @ApiProperty({
-    description: '類別',
+    description: '類型',
     example: 'income',
     maxLength: 7,
     minLength: 6,
@@ -70,4 +70,6 @@ class QueryTransactionDto {
   endDate?: string; // '2026-01-01'
 }
 
-export { CreateTransactionDto, QueryTransactionDto };
+class UpdateTransactionDto extends PartialType(CreateTransactionDto) {}
+
+export { CreateTransactionDto, QueryTransactionDto, UpdateTransactionDto };

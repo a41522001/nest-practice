@@ -13,4 +13,11 @@ class CreateCategoryDto {
   name: string;
 }
 
-export { CreateCategoryDto };
+class CategoryResponseDto {
+  id: string;
+  name: string;
+  deletedAt: Date | null;
+  isDefault: boolean;
+}
+
+export { CreateCategoryDto, CategoryResponseDto };
