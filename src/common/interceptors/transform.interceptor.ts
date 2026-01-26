@@ -7,13 +7,7 @@ import {
 import { Response as ExpressResponse } from 'express';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-
-export interface Response<T> {
-  code: number;
-  data: T;
-  message: string;
-  time: string;
-}
+import type { Response } from '@/common/types';
 
 @Injectable()
 export class TransformInterceptor<T> implements NestInterceptor<

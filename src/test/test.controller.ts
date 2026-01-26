@@ -1,9 +1,9 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, InternalServerErrorException } from '@nestjs/common';
 
 @Controller('api/test')
 export class TestController {
   @Get()
   test() {
-    return 'test';
+    throw new InternalServerErrorException('資料庫連線失敗');
   }
 }
