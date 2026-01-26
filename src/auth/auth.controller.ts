@@ -12,7 +12,7 @@ import {
 import { AuthService } from './auth.service';
 import { LoginDto, SignupDto } from './auth.dto';
 import { AuthGuard } from './auth.guard';
-import type { RequestWithUser } from '@/common/types';
+import type { CustomRequest } from '@/common/types';
 import type { Response, Request as RequestType } from 'express';
 import { getCookieOptions, clearCookie } from '@/common/utils/cookie';
 import { ConfigService } from '@nestjs/config';
@@ -73,7 +73,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard)
   async logout(
-    @Request() req: RequestWithUser,
+    @Request() req: CustomRequest,
     @Res({ passthrough: true }) res: Response,
   ) {
     const { refreshToken } = req.cookies;
@@ -85,7 +85,7 @@ export class AuthController {
   // TODO: profile 會棄用
   @UseGuards(AuthGuard)
   @Get('profile')
-  profile(@Request() req: RequestWithUser) {
+  profile(@Request() req: CustomRequest) {
     // return req.user;
     throw new Error('has a error');
   }

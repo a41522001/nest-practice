@@ -8,14 +8,14 @@ import {
 } from '@nestjs/common';
 
 import type { Response } from 'express';
-import { ErrorResponse, RequestWithUser } from '../types';
+import { ErrorResponse, CustomRequest } from '../types';
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<RequestWithUser>();
+    const request = ctx.getRequest<CustomRequest>();
     const status =
       exception instanceof HttpException
         ? exception.getStatus()

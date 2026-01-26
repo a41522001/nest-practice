@@ -53,7 +53,7 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  // 設定訪問路徑為 http://localhost:3000/api
+  // 設定訪問路徑為 http://localhost:3000/api#
   SwaggerModule.setup('api', app, document);
   app.useGlobalInterceptors(new TransformInterceptor());
   app.useGlobalFilters(new AllExceptionsFilter());

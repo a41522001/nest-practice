@@ -7,7 +7,7 @@ import {
   IsNotEmpty,
 } from 'class-validator';
 
-export class SignupDto {
+class SignupDto {
   @ApiProperty({
     description: '使用者的真實姓名',
     example: '小明',
@@ -44,7 +44,7 @@ export class SignupDto {
   pwd: string;
 }
 
-export class LoginDto {
+class LoginDto {
   @ApiProperty({
     description: '使用者的電子郵件',
     example: 'example@example.com',
@@ -81,3 +81,5 @@ export class LoginDto {
   })
   pwd: string;
 }
+
+export { SignupDto, LoginDto };

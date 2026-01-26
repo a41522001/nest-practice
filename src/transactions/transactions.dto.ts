@@ -6,9 +6,12 @@ import {
   IsNotEmpty,
   IsInt,
   IsUUID,
+  IsOptional,
+  IsEnum,
+  Matches,
 } from 'class-validator';
-
-export class CreateTransactionDto {
+import { TransactionType } from '@/generated/prisma/client';
+class CreateTransactionDto {
   @ApiProperty({
     description: '類別',
     example: 'income',
@@ -45,3 +48,26 @@ export class CreateTransactionDto {
   @IsUUID()
   categoryId: string;
 }
+class QueryTransactionDto {
+  @IsOptional()
+  @IsEnum(TransactionType, {
+    message: '類型應為收入(income)或支出(expense)',
+  })
+  type?: TransactionType; // 'income' | 'expense'
+
+  @IsOptional()
+  @IsUUID(undefined, {
+    message: '類別格式錯誤',
+  })
+  categoryId?: string;
+
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'startDate 格式應為 YYYY-MM-DD' })
+  startDate?: string; // '2026-01-01'
+
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'endDate 格式應為 YYYY-MM-DD' })
+  endDate?: string; // '2026-01-01'
+}
+
+export { CreateTransactionDto, QueryTransactionDto };

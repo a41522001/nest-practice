@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { Response } from 'express';
-import { RequestWithUser, JwtPayload } from '@/common/types';
+import { CustomRequest, JwtPayload } from '@/common/types';
 import { UserService } from '@/user/user.service';
 import { ConfigService } from '@nestjs/config';
 import { EnvConfig } from '@/common/configs/env.config';
@@ -21,7 +21,7 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const req = context.switchToHttp().getRequest<RequestWithUser>();
+    const req = context.switchToHttp().getRequest<CustomRequest>();
     const res = context.switchToHttp().getResponse<Response>();
 
     // 1. 先嘗試驗證 Access Token
@@ -45,7 +45,7 @@ export class AuthGuard implements CanActivate {
     return false;
   }
 
-  private async validateAccessToken(req: RequestWithUser): Promise<{
+  private async validateAccessToken(req: CustomRequest): Promise<{
     valid: boolean;
     user?: { sub: string; username: string; id: string };
   }> {
