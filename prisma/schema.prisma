@@ -27,7 +27,7 @@ model User {
 
 model Category {
   id        String    @id @default(uuid())
-  name      String    @unique
+  name      String    @unique @db.VarChar(10)
   deletedAt DateTime?
   userId    String? // 可選：null = 系統預設，有值 = 用戶自訂
 

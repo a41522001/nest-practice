@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, MaxLength, IsNotEmpty } from 'class-validator';
+import { IsString, MaxLength, IsNotEmpty, IsUUID } from 'class-validator';
 
 class CreateCategoryDto {
   @ApiProperty({
@@ -7,9 +7,9 @@ class CreateCategoryDto {
     example: '餐飲',
     maxLength: 10,
   })
+  @MaxLength(10, { message: '類別名最多10個字' })
   @IsString()
   @IsNotEmpty()
-  @MaxLength(10)
   name: string;
 }
 
@@ -20,4 +20,30 @@ class CategoryResponseDto {
   isDefault: boolean;
 }
 
-export { CreateCategoryDto, CategoryResponseDto };
+class UpdateCategoryDto {
+  @ApiProperty({
+    description: '類別ID',
+    example: 'UUID',
+  })
+  @IsUUID(undefined, {
+    message: 'ID格式錯誤',
+  })
+  @IsNotEmpty({
+    message: 'ID不可為空',
+  })
+  categoryId: string;
+
+  @ApiProperty({
+    description: '類別名',
+    example: '餐飲',
+  })
+  @MaxLength(10, { message: '類別名最多10個字' })
+  @IsString({
+    message: '類別名格式錯誤',
+  })
+  @IsNotEmpty({
+    message: '類別名不可為空',
+  })
+  name: string;
+}
+export { CreateCategoryDto, CategoryResponseDto, UpdateCategoryDto };

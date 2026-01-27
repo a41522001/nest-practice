@@ -59,11 +59,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
     response.status(status).json(errorResponse);
   }
   private extractMessage(response: object): string {
-    const res = response as { message?: string | string[] };
+    const res = response as {
+      message?: string | string[];
+      statusCode?: number;
+    };
     if (Array.isArray(res.message)) {
       return res.message[0] || '請求失敗';
     }
     if (typeof res.message === 'string') {
+      if (res.statusCode === 401) {
+        return '請重新登入';
+      }
       return res.message;
     }
     return '請求失敗';
