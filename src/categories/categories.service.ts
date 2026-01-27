@@ -34,6 +34,7 @@ export class CategoriesService {
         data: {
           name: createCategoryDto.name,
           userId,
+          type: createCategoryDto.type,
         },
       });
       const { userId: user, ...rest } = category;

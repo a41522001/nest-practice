@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, MaxLength, IsNotEmpty, IsUUID } from 'class-validator';
-
+import {
+  IsString,
+  MaxLength,
+  IsNotEmpty,
+  IsUUID,
+  IsEnum,
+} from 'class-validator';
+import { TransactionType } from '@/generated/prisma/client';
 class CreateCategoryDto {
   @ApiProperty({
     description: '類別名',
@@ -11,6 +17,19 @@ class CreateCategoryDto {
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @ApiProperty({
+    description: '收支類型',
+    example: 'income',
+    maxLength: 7,
+    minLength: 6,
+  })
+  @IsEnum(TransactionType, {
+    message: '收支類型應為收入(income)或支出(expense)',
+  })
+  @IsString()
+  @IsNotEmpty()
+  type: TransactionType;
 }
 
 class CategoryResponseDto {

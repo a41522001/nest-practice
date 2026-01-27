@@ -10,6 +10,7 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { TestModule } from './test/test.module';
 import { TokensModule } from './tokens/tokens.module';
 import { RedisModule } from './redis/redis.module';
+import { StatisticsModule } from './statistics/statistics.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -24,7 +25,10 @@ import { RedisModule } from './redis/redis.module';
     TestModule,
     TokensModule,
     RedisModule,
+    StatisticsModule,
   ],
+  controllers: [],
+  providers: [],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

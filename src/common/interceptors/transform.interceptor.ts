@@ -22,8 +22,6 @@ export class TransformInterceptor<T> implements NestInterceptor<
     const statusCode = response.statusCode;
     return next.handle().pipe(
       map((data: T | null) => {
-        console.log(data);
-
         return {
           code: statusCode,
           data: data ?? null,

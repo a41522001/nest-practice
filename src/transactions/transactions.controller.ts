@@ -49,8 +49,8 @@ export class TransactionsController {
   @ApiOperation({ summary: '取得收支明細' })
   @HttpCode(HttpStatus.OK)
   async getTransactions(
-    @Request() req: CustomRequest,
     @Query() query: QueryTransactionDto,
+    @Request() req: CustomRequest,
   ): Promise<PaginatedTransactionResponseDto> {
     const userId = req.user.id;
     const result = await this.transactionsService.getTransactions(
