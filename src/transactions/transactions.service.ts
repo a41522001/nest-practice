@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import {
   CreateTransactionDto,
+  PaginatedTransactionResponseDto,
   QueryTransactionDto,
   UpdateTransactionDto,
 } from './transactions.dto';
@@ -32,7 +33,7 @@ export class TransactionsService {
     userId: string,
     timezone: string,
     query: QueryTransactionDto,
-  ): Promise<Transaction[]> {
+  ): Promise<PaginatedTransactionResponseDto> {
     const where: Prisma.TransactionWhereInput = {
       userId,
     };
@@ -61,13 +62,42 @@ export class TransactionsService {
         where.createdAt.lte = endUtc;
       }
     }
-    const transactions = await this.prismaService.transaction.findMany({
-      where,
-    });
-    return transactions;
+    const { page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
+    const [transactions, total] = await Promise.all([
+      this.prismaService.transaction.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+      }),
+      this.prismaService.transaction.count({
+        where,
+      }),
+    ]);
+    return {
+      data: transactions,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async deleteTransaction(transactionId: string, userId: string) {
+    const transaction = await this.prismaService.transaction.findUnique({
+      where: {
+        id: transactionId,
+        userId,
+      },
+    });
+    if (!transaction) {
+      throw new BadRequestException('明細不存在');
+    }
     await this.prismaService.transaction.delete({
       where: {
         id: transactionId,
@@ -81,6 +111,15 @@ export class TransactionsService {
     userId: string,
     updateTransactionDto: UpdateTransactionDto,
   ) {
+    const transaction = await this.prismaService.transaction.findUnique({
+      where: {
+        id: transactionId,
+        userId,
+      },
+    });
+    if (!transaction) {
+      throw new BadRequestException('明細不存在');
+    }
     await this.prismaService.transaction.update({
       where: {
         id: transactionId,

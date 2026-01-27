@@ -1,10 +1,6 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import { Category, Prisma } from '@/generated/prisma/client';
+import { Prisma } from '@/generated/prisma/client';
 import {
   CreateCategoryDto,
   CategoryResponseDto,

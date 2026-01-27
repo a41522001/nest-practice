@@ -15,6 +15,7 @@ import {
 import { AuthGuard } from '@/auth/auth.guard';
 import {
   CreateTransactionDto,
+  PaginatedTransactionResponseDto,
   QueryTransactionDto,
   UpdateTransactionDto,
 } from './transactions.dto';
@@ -50,14 +51,14 @@ export class TransactionsController {
   async getTransactions(
     @Request() req: CustomRequest,
     @Query() query: QueryTransactionDto,
-  ): Promise<Transaction[]> {
+  ): Promise<PaginatedTransactionResponseDto> {
     const userId = req.user.id;
-    const transactions = await this.transactionsService.getTransactions(
+    const result = await this.transactionsService.getTransactions(
       userId,
       req.timezone,
       query,
     );
-    return transactions;
+    return result;
   }
 
   // 刪除收支明細
