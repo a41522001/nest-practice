@@ -82,13 +82,6 @@ export class AuthController {
     clearCookie(this.configService, res, 'accessToken');
     clearCookie(this.configService, res, 'refreshToken');
   }
-  // TODO: profile 會棄用
-  @UseGuards(AuthGuard)
-  @Get('profile')
-  profile(@Request() req: CustomRequest) {
-    // return req.user;
-    throw new Error('has a error');
-  }
   // TODO: ERROR 測試用
   @Get('error')
   error() {

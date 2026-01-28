@@ -11,6 +11,7 @@ import { TestModule } from './test/test.module';
 import { TokensModule } from './tokens/tokens.module';
 import { RedisModule } from './redis/redis.module';
 import { StatisticsModule } from './statistics/statistics.module';
+import { ExportModule } from './export/export.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -26,6 +27,7 @@ import { StatisticsModule } from './statistics/statistics.module';
     TokensModule,
     RedisModule,
     StatisticsModule,
+    ExportModule,
   ],
   controllers: [],
   providers: [],

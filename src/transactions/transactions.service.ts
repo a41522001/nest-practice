@@ -72,13 +72,36 @@ export class TransactionsService {
         orderBy: {
           createdAt: 'desc',
         },
+        select: {
+          id: true,
+          amount: true,
+          note: true,
+          type: true,
+          createdAt: true,
+          category: {
+            select: {
+              name: true,
+            },
+          },
+        },
       }),
       this.prismaService.transaction.count({
         where,
       }),
     ]);
+    const result = transactions.map((item) => {
+      const { id, amount, note, type, createdAt, category } = item;
+      return {
+        id,
+        amount,
+        note,
+        type,
+        createdAt,
+        category: category.name,
+      };
+    });
     return {
-      data: transactions,
+      data: result,
       meta: {
         total,
         page,

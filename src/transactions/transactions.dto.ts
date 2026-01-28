@@ -14,7 +14,15 @@ import {
 } from 'class-validator';
 import { Transaction, TransactionType } from '@/generated/prisma/client';
 import { Type } from 'class-transformer';
-
+import { Decimal } from '@prisma/client/runtime/wasm-compiler-edge';
+interface TransactionResponseDto {
+  type: TransactionType;
+  amount: Decimal;
+  note: string | null;
+  category: string;
+  id: string;
+  createdAt: Date;
+}
 class CreateTransactionDto {
   @ApiProperty({
     description: '類型',
@@ -117,7 +125,7 @@ class QueryTransactionDto {
 }
 
 class PaginatedTransactionResponseDto {
-  data: Transaction[];
+  data: TransactionResponseDto[];
   meta: {
     total: number; // 總筆數
     page: number; // 當前頁
