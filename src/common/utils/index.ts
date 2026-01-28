@@ -1,11 +1,12 @@
 import bcrypt from 'bcrypt';
-import { DateTime, Duration, Interval } from 'luxon';
+import { ValidationError } from 'class-validator';
+import { DateTime } from 'luxon';
 /**
  * 對密碼進行加鹽hash處理。
  * @param {string} password - 需要hash處理的純文字密碼。
  * @returns {Promise<string>} hash過的密碼字串。
  */
-export const saltPassword = async (password: string): Promise<string> => {
+const saltPassword = async (password: string): Promise<string> => {
   const saltRounds = 10;
   const bcryptPassword = await bcrypt.hash(password, saltRounds);
   return bcryptPassword;
@@ -17,7 +18,7 @@ export const saltPassword = async (password: string): Promise<string> => {
  * @param {string} hashPassword - 資料庫中儲存的hash密碼。
  * @returns {Promise<boolean>} 如果密碼相符則解析為 true，否則為 false。
  */
-export const decodePassword = async (
+const decodePassword = async (
   userPassword: string,
   hashPassword: string,
 ): Promise<boolean> => {
@@ -25,9 +26,32 @@ export const decodePassword = async (
   return isPasswordExist;
 };
 
-export const getRefreshTokenExpiresAt = (days: number): Date => {
+const getRefreshTokenExpiresAt = (days: number): Date => {
   const expireDate = DateTime.utc().plus({ days });
   return expireDate.toJSDate();
 };
 
-export const getTaipeiTime = () => '';
+const formatValidationErrors = (
+  errors: ValidationError[],
+): Record<string, string[]> => {
+  const result: Record<string, string[]> = {};
+  errors.forEach((error) => {
+    const field = error.property;
+    const messages = error.constraints
+      ? Object.values(error.constraints)
+      : ['驗證失敗'];
+    result[field] = messages;
+  });
+
+  return result;
+};
+
+const getTaipeiTime = () => '';
+
+export {
+  saltPassword,
+  decodePassword,
+  getRefreshTokenExpiresAt,
+  formatValidationErrors,
+  getTaipeiTime,
+};

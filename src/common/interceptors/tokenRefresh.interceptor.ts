@@ -8,7 +8,7 @@ import {
 import { Observable, from, throwError } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 import type { Response } from 'express';
-import { RequestWithUser } from '@/common/types';
+import { CustomRequest } from '@/common/types';
 import { TokensService } from '@/tokens/tokens.service';
 import { AuthService } from '@/auth/auth.service';
 import { ConfigService } from '@nestjs/config';
@@ -24,7 +24,7 @@ export class TokenRefreshInterceptor implements NestInterceptor {
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const req = context.switchToHttp().getRequest<RequestWithUser>();
+    const req = context.switchToHttp().getRequest<CustomRequest>();
     const res = context.switchToHttp().getResponse<Response>();
 
     // 如果不需要刷新，直接放行
@@ -55,7 +55,7 @@ export class TokenRefreshInterceptor implements NestInterceptor {
   }
 
   private async handleTokenRefresh(
-    req: RequestWithUser,
+    req: CustomRequest,
     res: Response,
     refreshToken: string,
   ): Promise<boolean> {

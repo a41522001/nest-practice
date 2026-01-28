@@ -7,16 +7,29 @@ interface JwtPayload {
   aud: string;
   iss: string;
 }
-interface RequestWithUser extends Request {
+interface CustomRequest extends Request {
   user: {
     sub: string;
     username: string;
     id: string;
   };
+  timezone: string;
 }
-
+interface Response<T> {
+  code: number;
+  data: T;
+  message: string;
+  time: string;
+}
+interface ErrorResponse {
+  code: number;
+  data: null;
+  message: string;
+  time: string;
+  errors?: Record<string, string[]>;
+}
 interface Tokens {
   accessToken: string;
   refreshToken: string;
 }
-export type { RequestWithUser, JwtPayload, Tokens };
+export type { CustomRequest, JwtPayload, Tokens, Response, ErrorResponse };

@@ -12,11 +12,12 @@ import {
 import { AuthService } from './auth.service';
 import { LoginDto, SignupDto } from './auth.dto';
 import { AuthGuard } from './auth.guard';
-import type { RequestWithUser } from '@/common/types';
+import type { CustomRequest } from '@/common/types';
 import type { Response, Request as RequestType } from 'express';
 import { getCookieOptions, clearCookie } from '@/common/utils/cookie';
 import { ConfigService } from '@nestjs/config';
 import { EnvConfig } from '@/common/configs/env.config';
+import { ApiOperation } from '@nestjs/swagger';
 @Controller('api/auth')
 export class AuthController {
   constructor(
@@ -24,13 +25,16 @@ export class AuthController {
     private readonly configService: ConfigService<EnvConfig>,
   ) {}
   // 註冊
+  @ApiOperation({ summary: '使用者註冊' })
   @Post('signup')
   @HttpCode(HttpStatus.OK)
   async signup(@Body() signupDto: SignupDto): Promise<string> {
     const message = await this.authService.signup(signupDto);
     return message;
   }
+
   // 登入
+  @ApiOperation({ summary: '使用者登入' })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(
@@ -38,7 +42,6 @@ export class AuthController {
     @Request() req: RequestType,
     @Res({ passthrough: true }) res: Response,
   ): Promise<string> {
-    console.log('login');
     const { refreshToken: cookieRefreshToken } = req.cookies;
     const { accessToken, refreshToken } = await this.authService.login(
       loginUserDto,
@@ -63,12 +66,14 @@ export class AuthController {
     });
     return '登入成功';
   }
+
   // 登出
+  @ApiOperation({ summary: '使用者登出' })
   @Get('logout')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard)
   async logout(
-    @Request() req: RequestWithUser,
+    @Request() req: CustomRequest,
     @Res({ passthrough: true }) res: Response,
   ) {
     const { refreshToken } = req.cookies;
@@ -76,12 +81,6 @@ export class AuthController {
     await this.authService.logout(userId, refreshToken);
     clearCookie(this.configService, res, 'accessToken');
     clearCookie(this.configService, res, 'refreshToken');
-  }
-  // TODO: profile 會棄用
-  @UseGuards(AuthGuard)
-  @Get('profile')
-  profile(@Request() req: RequestWithUser) {
-    return req.user;
   }
   // TODO: ERROR 測試用
   @Get('error')

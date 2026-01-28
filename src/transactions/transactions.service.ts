@@ -1,7 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { CreateTransactionDto } from './transactions.dto';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  CreateTransactionDto,
+  PaginatedTransactionResponseDto,
+  QueryTransactionDto,
+  UpdateTransactionDto,
+} from './transactions.dto';
 import { PrismaService } from '@/prisma/prisma.service';
-import { Transaction } from '@/generated/prisma/client';
+import { Prisma, Transaction } from '@/generated/prisma/client';
+import { DateTime } from 'luxon';
 
 @Injectable()
 export class TransactionsService {
@@ -22,20 +28,127 @@ export class TransactionsService {
     });
     return transaction;
   }
-  async getTransactions(userId: string): Promise<Transaction[]> {
-    const transactions = await this.prismaService.transaction.findMany({
+
+  async getTransactions(
+    userId: string,
+    timezone: string,
+    query: QueryTransactionDto,
+  ): Promise<PaginatedTransactionResponseDto> {
+    const where: Prisma.TransactionWhereInput = {
+      userId,
+    };
+    if (query.type) {
+      where.type = query.type;
+    }
+    if (query.categoryId) {
+      where.categoryId = query.categoryId;
+    }
+    if (query.startDate || query.endDate) {
+      where.createdAt = {};
+      if (query.startDate) {
+        // 用戶本地日期的開始 (00:00:00) 轉換為 UTC
+        const startUtc = DateTime.fromISO(query.startDate, { zone: timezone })
+          .startOf('day')
+          .toUTC()
+          .toJSDate();
+        where.createdAt.gte = startUtc;
+      }
+      if (query.endDate) {
+        // 用戶本地日期的結束 (23:59:59.999) 轉換為 UTC
+        const endUtc = DateTime.fromISO(query.endDate, { zone: timezone })
+          .endOf('day')
+          .toUTC()
+          .toJSDate();
+        where.createdAt.lte = endUtc;
+      }
+    }
+    const { page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
+    const [transactions, total] = await Promise.all([
+      this.prismaService.transaction.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        select: {
+          id: true,
+          amount: true,
+          note: true,
+          type: true,
+          createdAt: true,
+          category: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      }),
+      this.prismaService.transaction.count({
+        where,
+      }),
+    ]);
+    const result = transactions.map((item) => {
+      const { id, amount, note, type, createdAt, category } = item;
+      return {
+        id,
+        amount,
+        note,
+        type,
+        createdAt,
+        category: category.name,
+      };
+    });
+    return {
+      data: result,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async deleteTransaction(transactionId: string, userId: string) {
+    const transaction = await this.prismaService.transaction.findUnique({
       where: {
+        id: transactionId,
         userId,
       },
     });
-    return transactions;
-  }
-  async deleteTransaction(transactionId: string, userId: string) {
+    if (!transaction) {
+      throw new BadRequestException('明細不存在');
+    }
     await this.prismaService.transaction.delete({
       where: {
         id: transactionId,
         userId,
       },
+    });
+  }
+
+  async updateTransaction(
+    transactionId: string,
+    userId: string,
+    updateTransactionDto: UpdateTransactionDto,
+  ) {
+    const transaction = await this.prismaService.transaction.findUnique({
+      where: {
+        id: transactionId,
+        userId,
+      },
+    });
+    if (!transaction) {
+      throw new BadRequestException('明細不存在');
+    }
+    await this.prismaService.transaction.update({
+      where: {
+        id: transactionId,
+        userId,
+      },
+      data: updateTransactionDto,
     });
   }
 }
